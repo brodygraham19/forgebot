@@ -4,27 +4,26 @@ from discord.ext import commands
 from discord.ui import View, Button
 from discord import ButtonStyle, Interaction
 
-# --- Bot setup ---
+# --- Bot Setup ---
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# --- Ticket creation button view ---
+# --- Ticket Views ---
 class TicketView(View):
     def __init__(self):
         super().__init__(timeout=None)
         self.add_item(Button(label="🎟️ Create Ticket", custom_id="create_ticket", style=ButtonStyle.green))
 
-# --- Close ticket button view ---
 class CloseTicketView(View):
     def __init__(self):
         super().__init__(timeout=None)
         self.add_item(Button(label="🔒 Close Ticket", custom_id="close_ticket", style=ButtonStyle.red))
 
-# --- When the bot comes online ---
+# --- On Bot Ready ---
 @bot.event
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
-    channel = discord.utils.get(bot.get_all_channels(), name="🎫・tickets")
+    channel = discord.utils.get(bot.get_all_channels(), name="🎫・tickets")  # Matches your channel name
     if channel:
         embed = discord.Embed(
             title="🎫 Need Help?",
@@ -32,12 +31,9 @@ async def on_ready():
             color=0x1abc9c
         )
         await channel.send(embed=embed, view=TicketView())
-        print("🎟️ Ticket panel sent successfully.")
-    else:
-        print("⚠️ No channel named '🎫・tickets' found.")
     print("🚀 Ticket system ready!")
 
-# --- Handle interactions (button clicks) ---
+# --- Interaction Handling ---
 @bot.event
 async def on_interaction(interaction: Interaction):
     custom_id = interaction.data.get("custom_id")
@@ -46,8 +42,8 @@ async def on_interaction(interaction: Interaction):
     if custom_id == "create_ticket":
         guild = interaction.guild
 
-        # --- Adjust these role names to match your server ---
-        support_role = discord.utils.get(guild.roles, name="Support")
+        # --- Adjust these role names to match your server exactly ---
+        support_role = discord.utils.get(guild.roles, name="Ticket Support")
         admin_role = discord.utils.get(guild.roles, name="Admin")
 
         overwrites = {
@@ -60,16 +56,19 @@ async def on_interaction(interaction: Interaction):
         if admin_role:
             overwrites[admin_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
 
+        # Create or find Support Tickets category
         category = discord.utils.get(guild.categories, name="Support Tickets")
         if not category:
             category = await guild.create_category("Support Tickets")
 
+        # --- Create the ticket channel ---
         ticket_channel = await guild.create_text_channel(
             name=f"ticket-{interaction.user.name}",
             overwrites=overwrites,
             category=category
         )
 
+        # --- Send welcome message + close button ---
         embed = discord.Embed(
             title="🔧 Support Ticket Created",
             description=f"{interaction.user.mention}, our staff will assist you shortly.\n\nClick 🔒 to close this ticket when finished.",
@@ -84,11 +83,11 @@ async def on_interaction(interaction: Interaction):
         await discord.utils.sleep_until(discord.utils.utcnow() + discord.utils.timedelta(seconds=3))
         await interaction.channel.delete()
 
-# --- Admin command to manually resend the ticket panel ---
+# --- Manual Setup Command (for admins) ---
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def ticketsetup(ctx):
-    """Manually resend the ticket panel"""
+    """Manual setup command to resend the ticket embed"""
     embed = discord.Embed(
         title="🎫 Need Help?",
         description="Click below to open a private support ticket. Our staff will assist you shortly.",
@@ -97,5 +96,5 @@ async def ticketsetup(ctx):
     await ctx.send(embed=embed, view=TicketView())
     await ctx.send("✅ Ticket panel created successfully!")
 
-# --- Run the bot ---
-bot.run(os.getenv
+# --- Run Bot ---
+bot.run(os.getenv("DISCORD_BOT_TOKEN"))
