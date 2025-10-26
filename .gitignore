@@ -1,1 +1,30 @@
+Python cache and compiled files,
+pycache/
+*.pyc
 
+Virtual environment folder,
+venv/
+
+Environment variables file (keep your bot token private),
+.env
+
+macOS or Windows system files,
+.DS_Store
+Thumbs.db
+
+IDE/editor folders,
+.vscode/
+.idea/
+:Screenshot20220629151151:
+Click to react
+:skull:
+Click to react
+:fire:
+Click to react
+Add Reaction
+Edit
+NEW
+Forward
+More
+
+Message #general
